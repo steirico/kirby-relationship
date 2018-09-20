@@ -8,6 +8,13 @@ class RelationshipField extends CheckboxesField {
 	public $controller;
 	public $search;
 	public $thumbs;
+	public $minEntries;
+	public $maxEntries;
+	
+	public function __construct() {
+		$this->minEntries = is_numeric($this->minEntries) ? $this->minEntries : 0;
+		$this->maxEntries = is_numeric($this->maxEntries) ? $this->maxEntries : false;
+	}
 	
 	static public $assets = array(
 		'js' => array(
@@ -108,6 +115,9 @@ class RelationshipField extends CheckboxesField {
 			$list = new Brick('ol');
 			$list->attr('data-sortable', 'true');
 			$list->attr('data-deletable', 'true');
+
+			$list->attr('data-min-entries', $this->minEntries);
+			$list->attr('data-max-entries', $this->maxEntries);
 			
 			$items = $this->items_selected;
 		endif;
@@ -215,4 +225,12 @@ class RelationshipField extends CheckboxesField {
 		
 		return $thumbnail;
 	}
+	
+	public function validate() {
+		if(!v::min(count($this->value()), $this->minEntries)) return false;
+		if(!v::max(count($this->value()), $this->maxEntries)) return false;
+		
+		return true;
+	}
+		
 }

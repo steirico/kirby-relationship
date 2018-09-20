@@ -9,13 +9,17 @@ kirbyPlugin.Relationship = kirbyPlugin.Relationship || {};
  * 
  * @constructor
  * @param {Object} listboxNode - The HTMLElement used for the listbox.
+ * @param {Number} minEntries - The minimal number of entries that has to be in the listbox.
+ * @param {Number} maxEntries - The maximal number of entries that can be added to the listbox.
  */
-kirbyPlugin.Relationship.Listbox = function (listboxNode) {
+kirbyPlugin.Relationship.Listbox = function (listboxNode, minEntries, maxEntries) {
 	this.listboxNode      = listboxNode;
 	this.activeDescendant = listboxNode.getAttribute('aria-activedescendant');
 	this.multiselectable  = listboxNode.getAttribute('aria-multiselectable') === 'true';
 	this.sortable         = listboxNode.getAttribute('data-sortable') === 'true';
 	this.deletable        = listboxNode.getAttribute('data-deletable') === 'true';
+	this.minEntries       = minEntries;
+	this.maxEntries       = maxEntries;
 	this.selectCallback   = function (element, selected) {};
 	this.addCallback      = function (element) {};
 	this.deleteCallback   = function (element) {};
@@ -190,16 +194,18 @@ kirbyPlugin.Relationship.Listbox.prototype.checkClickItem = function (event) {
 kirbyPlugin.Relationship.Listbox.prototype.toggleSelectItem = function (item) {
 	var selected = item.getAttribute('aria-selected') === 'true' ? 'false' : 'true';
 	
-	if (!this.multiselectable && selected === 'true') {
-		var oldSelectedItem = this.listboxNode.querySelector('[role="option"][aria-selected="true"]');
-		if (oldSelectedItem) {
-			oldSelectedItem.setAttribute('aria-selected', 'false');
+	var selectedItem = this.selectCallback(item, selected === 'true');
+
+	if(selectedItem){
+		item.setAttribute('aria-selected', selected);
+
+		if (!this.multiselectable && selected === 'true') {
+			var oldSelectedItem = this.listboxNode.querySelector('[role="option"][aria-selected="true"]');
+			if (oldSelectedItem) {
+				oldSelectedItem.setAttribute('aria-selected', 'false');
+			}
 		}
 	}
-	
-	item.setAttribute('aria-selected', selected);
-	
-	this.selectCallback(item, selected === 'true');
 };
 
 /**
@@ -209,11 +215,15 @@ kirbyPlugin.Relationship.Listbox.prototype.toggleSelectItem = function (item) {
  * @returns {Object} The HTMLElement that were added to the listbox.
  */
 kirbyPlugin.Relationship.Listbox.prototype.addItem = function (item) {
-	var addedItem = this.listboxNode.appendChild(item);
-	
-	this.addCallback(addedItem);
-	
-	return addedItem;
+	if((!this.maxEntries) || (this.listboxNode.childElementCount < this.maxEntries)){
+		var addedItem = this.listboxNode.appendChild(item);
+		
+		this.addCallback(addedItem);
+		
+		return addedItem;
+	} else {
+		return false;
+	}
 };
 
 /**
@@ -223,24 +233,28 @@ kirbyPlugin.Relationship.Listbox.prototype.addItem = function (item) {
  * @returns {Object} The HTMLElement that was removed from the listbox.
  */
 kirbyPlugin.Relationship.Listbox.prototype.deleteItem = function (item) {
-	var previousItem = item.previousElementSibling;
-	var nextItem = item.nextElementSibling;
-	
-	if (this.activeDescendant === item.id) {
-		if (previousItem) {
-			this.focusItem(previousItem);
-		} else if (nextItem) {
-			this.focusItem(nextItem);
-		} else {
-			this.clearActiveDescendant();
+	if((!this.minEntries) || (this.listboxNode.childElementCount > this.minEntries)){
+		var previousItem = item.previousElementSibling;
+		var nextItem = item.nextElementSibling;
+		
+		if (this.activeDescendant === item.id) {
+			if (previousItem) {
+				this.focusItem(previousItem);
+			} else if (nextItem) {
+				this.focusItem(nextItem);
+			} else {
+				this.clearActiveDescendant();
+			}
 		}
+		
+		var deletedItem = this.listboxNode.removeChild(item);
+		
+		this.deleteCallback(deletedItem);
+		
+		return deletedItem;
+	} else {
+		return false;
 	}
-	
-	var deletedItem = this.listboxNode.removeChild(item);
-	
-	this.deleteCallback(deletedItem);
-	
-	return deletedItem;
 };
 
 /**

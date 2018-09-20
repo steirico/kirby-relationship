@@ -6,9 +6,12 @@
 		var $list_available = $(field).find('.relationship-list--available');
 		var $list_selected = $(field).find('.relationship-list--selected');
 		
+		var $min_entries = $list_selected.attr('data-min-entries');
+		var $max_entries = $list_selected.attr('data-max-entries');
+		
 		// Initialize the listbox functionality on the lists:
 		var listbox_available = new kirbyPlugin.Relationship.Listbox($list_available.get(0));
-		var listbox_selected = new kirbyPlugin.Relationship.Listbox($list_selected.get(0));
+		var listbox_selected = new kirbyPlugin.Relationship.Listbox($list_selected.get(0), $min_entries, $max_entries);
 		
 		// Get references to search elements:
 		var $search_input = $(field).find('.relationship-search input');
@@ -17,10 +20,10 @@
 		// An item in the available list has been selected/deselected:
 		listbox_available.selectCallback = function (item, selected) {
 			if (selected) {
-				listbox_selected.addItem(item.cloneNode(true));
+				return listbox_selected.addItem(item.cloneNode(true));
 			} else {
 				var key = item.getAttribute('data-key');
-				listbox_selected.deleteItem($list_selected.find('li[data-key="' + key + '"]').get(0));
+				return listbox_selected.deleteItem($list_selected.find('li[data-key="' + key + '"]').get(0));
 			}
 		}
 		
