@@ -130,6 +130,21 @@
 	display: none;
 }
 
+ li[aria-selected="true"][aria-variant="single-column-hide-previous"] {
+	color: #000000;
+	font-weight: bold;
+}
+
+.relationship-list--available li[aria-variant="single-column-hide-previous"][aria-selected="false"] .relationship-item-delete,
+.relationship-list--available li[aria-variant="single-column-hide-previous"][aria-selected="true"] .relationship-item-add {
+	display: inline;
+}
+
+.relationship-list--available li[aria-variant="single-column-hide-previous"][aria-selected="true"] .relationship-item-delete,
+.relationship-list--available li[aria-variant="single-column-hide-previous"][aria-selected="false"] .relationship-item-add {
+	display: none;
+}
+
 /* Selected list items: */
 .relationship-list--selected li {
 	cursor: move;

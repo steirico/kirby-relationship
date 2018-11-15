@@ -10,6 +10,7 @@ class RelationshipField extends CheckboxesField {
 	public $thumbs;
 	public $minEntries;
 	public $maxEntries;
+	public $variant;
 	
 	public function __construct() {
 		$this->minEntries = is_numeric($this->minEntries) ? $this->minEntries : 0;
@@ -115,6 +116,10 @@ class RelationshipField extends CheckboxesField {
 			$list = new Brick('ol');
 			$list->attr('data-sortable', 'true');
 			$list->attr('data-deletable', 'true');
+			
+			if($this->variant == 'single-column-hide-previous'){
+				$list->attr('hidden', 'true');
+			}
 
 			$list->attr('data-min-entries', $this->minEntries);
 			$list->attr('data-max-entries', $this->maxEntries);
@@ -135,9 +140,14 @@ class RelationshipField extends CheckboxesField {
 		
 		$counter = 0;
 		foreach ($items as $key):
+			$selected = in_array($key, $this->items_selected);
+
+			if($selected && ($this->variant == 'single-column-hide-previous')){
+				continue;
+			}
+
 			$counter++;
 			$id = $this->uniqid.'_'.$type.'_'.$counter;
-			$selected = ($type === 'available') && in_array($key, $this->items_selected);
 			$checked = ($type === 'selected');
 			
 			$item = $this->item($key, $this->items_all[$key], $id, $selected, $checked);
@@ -156,6 +166,7 @@ class RelationshipField extends CheckboxesField {
 		$item->attr('data-key', $key);
 		$item->attr('id', $id);
 		$item->attr('aria-selected', ($selected) ? 'true' : 'false');
+		$item->attr('aria-variant', $this->variant);
 		
 		if ($this->search):
 			$item->attr('data-search-index', trim(mb_strtolower($value)));
@@ -166,8 +177,16 @@ class RelationshipField extends CheckboxesField {
 		$item->append('<span class="relationship-item-sort"><i class="icon fa fa-bars" aria-hidden="true"></i></span>');
 		$item->append($this->thumbnail($key));
 		$item->append(new Brick('span', $value, ['class' => 'relationship-item-label']));
-		$item->append('<button class="relationship-item-add" tabindex="-1" type="button"><i class="icon fa fa-plus-circle" aria-hidden="true"></i></button>');
-		$item->append('<button class="relationship-item-delete" tabindex="-1" type="button"><i class="icon fa fa-minus-circle" aria-hidden="true"></i></button>');
+		if($this->variant == 'single-column-hide-previous'){
+			$plusIcon = 'fa-check-square-o ';
+			$minusIcon = 'fa-square-o';
+		} else {
+			$plusIcon = 'fa-plus-circle';
+			$minusIcon = 'fa-minus-circle';
+		}
+
+		$item->append('<button class="relationship-item-add" tabindex="-1" type="button"><i class="icon fa ' . $plusIcon . '" aria-hidden="true"></i></button>');
+		$item->append('<button class="relationship-item-delete" tabindex="-1" type="button"><i class="icon fa ' . $minusIcon . '" aria-hidden="true"></i></button>');
 
 		return $item;
 	}
