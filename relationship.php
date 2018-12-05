@@ -117,7 +117,7 @@ class RelationshipField extends CheckboxesField {
 			$list->attr('data-sortable', 'true');
 			$list->attr('data-deletable', 'true');
 			
-			if($this->variant == 'single-column-hide-previous'){
+			if(strpos($this->variant, 'single-column') === 0){
 				$list->attr('hidden', 'true');
 			}
 
@@ -177,7 +177,7 @@ class RelationshipField extends CheckboxesField {
 		$item->append('<span class="relationship-item-sort"><i class="icon fa fa-bars" aria-hidden="true"></i></span>');
 		$item->append($this->thumbnail($key));
 		$item->append(new Brick('span', $value, ['class' => 'relationship-item-label']));
-		if($this->variant == 'single-column-hide-previous'){
+		if(strpos($this->variant, 'single-column') === 0){
 			$plusIcon = 'fa-check-square-o ';
 			$minusIcon = 'fa-square-o';
 		} else {
@@ -246,8 +246,11 @@ class RelationshipField extends CheckboxesField {
 	}
 	
 	public function validate() {
-		if(!v::min(count($this->value()), $this->minEntries)) return false;
-		if(!v::max(count($this->value()), $this->maxEntries)) return false;
+		if(count($this->value()) < $this->minEntries) return false;
+		
+		if($this->maxEntries){
+			if(count($this->value()) > $this->maxEntries) return false;
+		}
 		
 		return true;
 	}
